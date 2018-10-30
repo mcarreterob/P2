@@ -2,10 +2,17 @@ with Lower_Layer_UDP;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 with Ada.Exceptions;
+with Chat_Messages;
+with Ada.Command_Line;
+with Client_Collections;
 
-procedure Client is
+procedure Chat_Client is
    package LLU renames Lower_Layer_UDP;
    package ASU renames Ada.Strings.Unbounded;
+	package ATIO renames Ada.Text_IO;
+	package ACL renames Ada.Command_Line;
+	package CM renames Chat_Messages;
+	package CC renames Client_Collections;
 
    Server_EP: LLU.End_Point_Type;
    Client_EP: LLU.End_Point_Type;
@@ -13,8 +20,14 @@ procedure Client is
    Request:   ASU.Unbounded_String;
    Reply:     ASU.Unbounded_String;
    Expired : Boolean;
+	Mess: CM.Message_Type;
+	Nick: ASU.Unbounded_String;
+	IP: ASU.Unbounded_String;
+	Finish: Boolean;
 
 begin
+	IP := ASU.To_Unbounded_String(LLU.To_IP(ASU.To_String(ACL.Argument(1))));
+	Nick := ASU.To_Unbounded_String()
    -- Construye el End_Point en el que está atado el servidor
    Server_EP := LLU.Build("127.0.0.1", 6123);
 
@@ -65,4 +78,4 @@ exception
                             Ada.Exceptions.Exception_Message(Ex));
       LLU.Finalize;
 
-end Client;
+end Chat_Client;

@@ -1,9 +1,12 @@
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
+with Ada.Strings.Maps;
+
 package body Client_Collections is
    package ATIO renames Ada.Text_IO;
+	package ASM renames Ada.Strings.Maps;
    use type ASU.Unbounded_String;
+	use type LLU.End_Point_Type;
 
    --Compruebo si la lista está vacía
    function Is_Empty(Collection: Collection_Type) return Boolean is
@@ -78,58 +81,34 @@ package body Client_Collections is
 		end loop;
 	end Delete_Client;
 
-	procedure Search_Word (List: in Word_List_Type;
-			                 Word: in ASU.Unbounded_String;
-			                 Count: out Natural) is
-		P_Aux: Word_List_Type;
-		Searched_Word: ASU.unbounded_String;
+	function Search_Client (Collection: in Collection_Type;
+									 EP: in LLU.End_Point_Type)
+									 return ASU.Unbounded_String is
+		P_Aux: Cell_A;
+		Nick: ASU.unbounded_String;
 		Found: Boolean;
 	begin
-		P_Aux := List;
+		P_Aux := Collection.P_First;
 		Found := False;
-		Count := 0;
 		while not Found and P_Aux /= null loop
 		--Si lo encuentra y existe la lista, lo muestra.
 		--Si no, continua recorriendo la lista
-			if P_Aux.Word = Word then
-				Searched_Word := P_Aux.Word;
-				Count := P_Aux.Count;
+			if P_Aux.Client_EP = EP then
+				Nick := P_Aux.Nick;
 				Found := True;
-				ATIO.Put_Line("|" & ASU.To_String(Searched_Word)
-									& "| - " & Natural'Image(Count));
+				ATIO.Put_Line("|" & ASU.To_String(Nick)
+									& "|");
 			else
 				P_Aux := P_Aux.Next;
 			end if;
 		end loop;
-		if Found = False then
-			ATIO.Put_Line("The word you are searching is not in the list");
-		end if;
-	end Search_Word;
-
-	procedure Max_Word (List: in Word_List_Type;
-	                    Word: out ASU.Unbounded_String;
-		                 Count: out Natural) is
-		P_Aux: Word_List_Type;
-	begin
-		P_Aux := List;
-		Word := P_Aux.Word;
-		Count := P_Aux.Count;
-		while P_Aux /= null loop
-		--Va comparando cada campo Count con el Count de la siguiente celda,
-		--si el de la siguiente celda es mayor, se lo guarda y continua
-		--hasta que llega al final de la lista
-			if Count < P_aux.Count then
-				Word := P_Aux.Word;
-				Count := P_Aux.Count;
-			else
-				P_Aux := P_Aux.Next;
+			if Found = False then
+				raise Client_Collection_Error;
 			end if;
-		end loop;
-		ATIO.Put("The most frequent word: |" & ASU.To_String(Word)
-					& "| - " & Natural'Image(Count));
-	end Max_Word;
+		return Nick;
+	end Search_Client;
 
-   procedure Sent_To_All (Collection: in Collection_Type;
+   procedure Send_To_All (Collection: in Collection_Type;
 								P_Buffer: access LLU.Buffer_Type) is
       P_Aux: Cell_A;
    begin
@@ -138,20 +117,41 @@ package body Client_Collections is
 			LLU.Send(P_Aux.Client_EP, P_Buffer);
          P_Aux := P_Aux.Next;
       end loop;      
-   end Sent_To_All;
+   end Send_To_All;
 
-	procedure Delete_List (List: in out Word_List_Type) is
-		P_Aux : Word_List_Type;
+	function Collection_Image(Collection: in Collection_Type) return String is
+		P_Aux : Cell_A;
+		Client_Data_Collection: ASU.Unbounded_String;
+		Client_EP: LLU.End_Point_Type;
+		Client_Nick: ASU.Unbounded_String;
+		Client_IP: ASU.Unbounded_String;
+		Client_Port: ASU.Unbounded_String;
+		Image_Line: ASU.Unbounded_String;
+		Position: Integer;
 	begin
-      if Is_Empty(List) then
-         ATIO.Put_Line("No words.");
+      if Is_Empty(Collection) then
+         ATIO.Put_Line("No clients.");
       else
-         P_Aux := List;
-         while not Is_Empty(P_Aux) loop
-				List := List.Next;
-            Free(P_Aux);
-				P_Aux := List;
+         P_Aux := Collection.P_First;
+         while not Is_Empty(Collection) loop
+				Client_EP := P_Aux.Client_EP;
+            Client_Nick := P_Aux.Nick;
+				LLU.Bind_Any(Client_EP);
+				Image_Line := ASU.To_Unbounded_String(LLU.Image(Client_EP));
+				Position := ASU.Index(Image_Line, ASM.To_Set(":")) + 1;
+				Image_Line := ASU.Tail(Image_Line, ASU.Length(Image_Line) - Position);
+				Position := ASU.Index(Image_Line, ASM.To_Set(","));
+				Client_IP := ASU.Head(Image_Line, Position - 1);
+				Image_Line := ASU.Tail(Image_Line, ASU.Length(Image_Line) - Position);
+				Position := ASU.Index(Image_Line, ASM.To_Set(":")) + 1;
+				Client_Port := ASU.Tail(Image_Line, Position - 1);
+				Client_Data_Collection := ASU.To_Unbounded_String (ASU.To_String(Client_Data_Collection) 
+													& ASU.To_String(Client_IP) & ":"
+													& ASU.To_String(Client_Port) & " "
+													& ASU.To_String(Client_Nick) & ASCII.LF);
+				P_Aux := P_Aux.Next;
          end loop;
       end if;
-	end Delete_List;
+		return ASU.To_String(Client_Data_Collection);
+	end Collection_Image;
 end Client_Collections;
