@@ -8,12 +8,6 @@ package body Client_Collections is
    use type ASU.Unbounded_String;
 	use type LLU.End_Point_Type;
 
-   --Compruebo si la lista está vacía
-   function Is_Empty(Collection: Collection_Type) return Boolean is
-   begin
-     return Collection.P_First = null;
-   end Is_Empty;
-
 	procedure Free is new Ada.Unchecked_Deallocation(Cell, Cell_A);
 
    procedure Add_Client(Collection: in out Collection_Type;
@@ -24,7 +18,7 @@ package body Client_Collections is
       Found: Boolean := False;
    begin
 		P_Aux := Collection.P_First;
-		if Is_Empty(Collection) then
+		if Collection.P_First = null then
 			Collection.P_First := new Cell'(EP, Nick, null);
    	   Collection.Total := 1;
 		--Si Unique = False es lista reader y añade siempre
@@ -96,11 +90,8 @@ package body Client_Collections is
 			if P_Aux.Client_EP = EP then
 				Nick := P_Aux.Nick;
 				Found := True;
-				ATIO.Put_Line("|" & ASU.To_String(Nick)
-									& "|");
-			else
-				P_Aux := P_Aux.Next;
 			end if;
+			P_Aux := P_Aux.Next;
 		end loop;
 			if Found = False then
 				raise Client_Collection_Error;
@@ -113,7 +104,7 @@ package body Client_Collections is
       P_Aux: Cell_A;
    begin
       P_Aux := Collection.P_First;
-      while not Is_Empty(Collection) loop
+      while P_Aux /= Null loop
 			LLU.Send(P_Aux.Client_EP, P_Buffer);
          P_Aux := P_Aux.Next;
       end loop;      
@@ -129,11 +120,11 @@ package body Client_Collections is
 		Image_Line: ASU.Unbounded_String;
 		Position: Integer;
 	begin
-      if Is_Empty(Collection) then
+        P_Aux := Collection.P_First;
+      if P_Aux = Null then
          ATIO.Put_Line("No clients.");
       else
-         P_Aux := Collection.P_First;
-         while not Is_Empty(Collection) loop
+         while P_Aux /= null loop
 				Client_EP := P_Aux.Client_EP;
             Client_Nick := P_Aux.Nick;
 				LLU.Bind_Any(Client_EP);

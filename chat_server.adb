@@ -63,7 +63,7 @@ begin
 				if Nick = "reader" then
 					CC.Add_Client(Reader_List, Client_EP, Nick, False);
 					ATIO.Put_Line("INIT received from " & ASU.To_String(Nick));
-				else
+				elsif Nick /= "reader" then
 					begin
 						CC.Add_Client(Writer_List, Client_EP, Nick, True);
 						ATIO.Put_Line("INIT received from " & ASU.To_String(Nick));
@@ -73,7 +73,8 @@ begin
 						CM.Message_Type'Output(Buffer'Access, Mess);
 						-- introduce el Nick en el Buffer
          			ASU.Unbounded_String'Output (Buffer'Access, Nick);
-						Reply := ASU.To_Unbounded_String(" joins the chat");
+						Reply := ASU.To_Unbounded_String("server: " & ASU.To_String(Nick)
+																	& " joins the chat");
 						-- introduce el Unbounded_String en el Buffer
          			ASU.Unbounded_String'Output (Buffer'Access, Reply);
 						CC.Send_To_All(Reader_List, Buffer'Access);
