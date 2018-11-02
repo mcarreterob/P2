@@ -28,6 +28,7 @@ procedure Chat_Client is
 	IP: String := LLU.To_IP(ASU.To_String(Maquina));
 	Puerto: Integer;
 	Finish: Boolean := False;
+	Comprobacion: ASU.Unbounded_String;
 
 begin
 	--Maquina := ASU.To_Unbounded_String(ACL.Argument(1));
@@ -75,8 +76,8 @@ begin
 				Mess := CM.Message_Type'Input(Buffer'Access);
 				Nick := ASU.Unbounded_String'Input(Buffer'Access);
 				Reply := ASU.Unbounded_String'Input(Buffer'Access);
-				Ada.Text_IO.Put(ASU.To_String(Nick) & ": ");
-				Ada.Text_IO.Put_Line(ASU.To_String(Reply));
+				ATIO.Put_Line(ASU.To_String(Nick) & ": " & ASU.To_String(Reply));
+				--ATIO.Put_Line(ASU.To_String(Reply));
 				LLU.Reset(Buffer);
 			end if;
 		end loop;
@@ -107,7 +108,7 @@ begin
 			LLU.Reset(Buffer);
 			Mess := CM.Writer;
 			CM.Message_Type'Output(buffer'Access, Mess);
-			Ada.Text_IO.Put("Message: ");
+			ATIO.Put("Message: ");
 			Request := ASU.To_Unbounded_String(Ada.Text_IO.Get_Line);
 			if Request = ".quit" then
 				Finish := True;
@@ -133,7 +134,7 @@ begin
 
 exception
    when Ex:others =>
-      Ada.Text_IO.Put_Line ("Excepción imprevista: " &
+      ATIO.Put_Line ("Excepción imprevista: " &
                             Ada.Exceptions.Exception_Name(Ex) & " en: " &
                             Ada.Exceptions.Exception_Message(Ex));
       LLU.Finalize;

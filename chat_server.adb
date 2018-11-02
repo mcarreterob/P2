@@ -28,6 +28,7 @@ procedure Chat_Server is
 	Nick: ASU.Unbounded_String;
 	Reader_List: CC.Collection_Type;
 	Writer_List: CC.Collection_Type;
+	Collection: ASU.Unbounded_String;
 
 begin
 
@@ -72,15 +73,15 @@ begin
 						Mess := CM.Server;
 						CM.Message_Type'Output(Buffer'Access, Mess);
 						-- introduce el Nick en el Buffer
-         			ASU.Unbounded_String'Output (Buffer'Access, Nick);
-						Reply := ASU.To_Unbounded_String("server: " & ASU.To_String(Nick)
+         			ASU.Unbounded_String'Output (Buffer'Access, ASU.To_Unbounded_String("server"));
+						Reply := ASU.To_Unbounded_String(ASU.To_String(Nick)
 																	& " joins the chat");
 						-- introduce el Unbounded_String en el Buffer
          			ASU.Unbounded_String'Output (Buffer'Access, Reply);
 						CC.Send_To_All(Reader_List, Buffer'Access);
 						exception
 							when CC.Client_Collection_Error =>
-								ATIO.Put_Line("INIT received from" & ASU.To_String(Nick)
+								ATIO.Put_Line("INIT received from " & ASU.To_String(Nick)
 													& ". IGNORED, nick already used");
 					end;
 				end if;
@@ -102,6 +103,8 @@ begin
 					-- Introduce el Unbounded_String en el Buffer
 					ASU.Unbounded_String'Output(Buffer'Access, Reply);
 					CC.Send_To_All(Reader_List, Buffer'Access);
+					Collection := ASU.To_Unbounded_String(CC.Collection_Image(Writer_List));
+					--ATIO.Put_Line(ASU.To_String(Collection));
 					exception
 						when CC.Client_Collection_Error =>
 							ATIO.Put_Line("WRITER received from unknown client. IGNORED");
@@ -115,7 +118,7 @@ begin
 
 exception
    when Ex:others =>
-      Ada.Text_IO.Put_Line ("Excepción imprevista: " &
+      ATIO.Put_Line ("Excepción imprevista: " &
                             Ada.Exceptions.Exception_Name(Ex) & " en: " &
                             Ada.Exceptions.Exception_Message(Ex));
       LLU.Finalize;
